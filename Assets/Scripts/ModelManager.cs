@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.XR.ARFoundation;
 
 public class ModelManager : MonoBehaviour
 {
@@ -6,25 +7,34 @@ public class ModelManager : MonoBehaviour
     [SerializeField] private GameObject modeloCuerpo;
     [SerializeField] private GameObject modeloHuesos;
     [SerializeField] private GameObject modeloOrganos;
-    [SerializeField] private GameObject modeloSistemas;    // ← nuevo
+    [SerializeField] private GameObject modeloSistemas;
     [SerializeField] private GameObject modeloMusculos;
 
     private GameObject modeloActivo;
-    private GameObject modeloActivoSecundario;    // ← para el segundo modelo simultáneo
+    private GameObject modeloActivoSecundario;
+    private ARAnchor ancla;
 
     void Awake()
     {
         modeloCuerpo.SetActive(false);
         modeloHuesos.SetActive(false);
         modeloOrganos.SetActive(false);
-        modeloSistemas.SetActive(false);    // ← nuevo
+        modeloSistemas.SetActive(false);
         modeloMusculos.SetActive(false);
     }
 
     public void IniciarEnPosicion(Vector3 posicion)
     {
-        transform.position = posicion;
+        // Crea un ancla en esa posiciÃ³n para fijar el modelo al mundo real
+        GameObject anclaGO = new GameObject("ModeloAncla");
+        anclaGO.transform.position = posicion;
+        ancla = anclaGO.AddComponent<ARAnchor>();
+
+        // El modelo pasa a ser hijo del ancla
+        transform.SetParent(ancla.transform);
+        transform.localPosition = Vector3.zero;
         transform.localScale = Vector3.one * 0.1f;
+
         MostrarModelo(modeloCuerpo);
     }
 
@@ -34,14 +44,11 @@ public class ModelManager : MonoBehaviour
 
     public void OnClickOrganos()
     {
-        // Desactiva lo que haya activo
         if (modeloActivo != null)
             modeloActivo.SetActive(false);
-
         if (modeloActivoSecundario != null)
             modeloActivoSecundario.SetActive(false);
 
-        // Activa los dos modelos juntos
         modeloOrganos.SetActive(true);
         modeloSistemas.SetActive(true);
 
@@ -54,7 +61,6 @@ public class ModelManager : MonoBehaviour
         if (modeloActivo != null)
             modeloActivo.SetActive(false);
 
-        // Desactiva el secundario si había uno activo (ej: venía de órganos)
         if (modeloActivoSecundario != null)
         {
             modeloActivoSecundario.SetActive(false);

@@ -36,46 +36,30 @@ public class ImageTrackingManager : MonoBehaviour
     }
 
     private void OnTrackablesChanged(ARTrackablesChangedEventArgs<ARTrackedImage> args)
+{
+    if (qrDetectado) return;
+
+    foreach (ARTrackedImage trackedImage in args.added)
     {
-        if (qrDetectado) return;
-
-        foreach (ARTrackedImage trackedImage in args.added)
+        if (trackedImage.referenceImage.name == nombreImagenQR)
         {
-            if (trackedImage.referenceImage.name == nombreImagenQR)
-            {
-                qrDetectado = true;
+            qrDetectado = true;
 
-                // Muestra los botones y un mensaje para que toque el suelo
-                if (canvasUI != null)
-                    canvasUI.SetActive(true);
+            // Aparece 1.5 metros adelante de la cámara
+            Camera arCamera = FindFirstObjectByType<Camera>();
+            Vector3 posicion = arCamera.transform.position + 
+                               arCamera.transform.forward * 1.5f;
 
-                Debug.Log("QR detectado — tocá el suelo para colocar el modelo");
-            }
+            modelManager.IniciarEnPosicion(posicion);
+
+            if (canvasUI != null)
+                canvasUI.SetActive(true);
         }
     }
+}
 
-    void Update()
-    {
-        // Solo escucha toques después de detectar el QR y antes de colocar el modelo
-        if (!qrDetectado || modeloColocado) return;
 
-        if (Touch.activeTouches.Count == 1)
-        {
-            var touch = Touch.activeTouches[0];
-
-            if (touch.phase != UnityEngine.InputSystem.TouchPhase.Began) return;
-
-            // Raycast contra planos reales detectados
-            if (raycastManager.Raycast(touch.screenPosition, hits, TrackableType.PlaneWithinPolygon))
-            {
-                Pose hitPose = hits[0].pose;
-                modelManager.IniciarEnPosicion(hitPose.position);
-                modeloColocado = true;
-            }
-        }
-    }
-
-    // SOLO PARA TESTING EN EDITOR — borrar antes de la build final
+    // SOLO PARA TESTING EN EDITOR
         void OnGUI()
 {
         #if UNITY_EDITOR
