@@ -11,7 +11,7 @@ public class ImageTrackingManager : MonoBehaviour
     [SerializeField] private ARTrackedImageManager trackedImageManager;
     [SerializeField] private ARRaycastManager raycastManager;
     [SerializeField] private ModelManager modelManager;
-    [SerializeField] private string nombreImagenQR = "qr_anatomia";
+    [SerializeField] private string nombreImagenQR = "images";
 
     private GameObject canvasUI;
     private bool qrDetectado = false;
