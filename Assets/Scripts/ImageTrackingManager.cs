@@ -31,8 +31,11 @@ public class ImageTrackingManager : MonoBehaviour
 
     void OnDisable()
     {
-        trackedImageManager.trackablesChanged.RemoveListener(OnTrackablesChanged);
-        EnhancedTouchSupport.Disable();
+        if (trackedImageManager != null)
+            trackedImageManager.trackablesChanged.RemoveListener(OnTrackablesChanged);
+
+        if (EnhancedTouchSupport.enabled)
+            EnhancedTouchSupport.Disable();
     }
 
     private void OnTrackablesChanged(ARTrackablesChangedEventArgs<ARTrackedImage> args)

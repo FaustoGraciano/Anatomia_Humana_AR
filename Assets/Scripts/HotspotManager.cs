@@ -28,9 +28,7 @@ public class HotspotManager : MonoBehaviour
                 Hotspot hotspot = hit.collider.GetComponent<Hotspot>();
 
                 if (hotspot != null)
-                {
                     MostrarPanel(hotspot.nombreEstructura, hotspot.descripcion);
-                }
             }
         }
     #else
@@ -48,9 +46,7 @@ public class HotspotManager : MonoBehaviour
                 Hotspot hotspot = hit.collider.GetComponent<Hotspot>();
 
                 if (hotspot != null)
-                {
                     MostrarPanel(hotspot.nombreEstructura, hotspot.descripcion);
-                }
             }
         }
     #endif
@@ -83,7 +79,7 @@ public class HotspotManager : MonoBehaviour
     {
         if (canvas == null) return;
 
-        // 1. Fondo negro del Panel (Altura dinámica heredada)
+        // 1. Panel fondo negro
         panelInfo = new GameObject("PanelHotspot");
         panelInfo.transform.SetParent(canvas.transform, false);
 
@@ -92,15 +88,14 @@ public class HotspotManager : MonoBehaviour
         panelRect.anchorMax = new Vector2(0.5f, 0.5f);
         panelRect.pivot = new Vector2(0.5f, 0.5f);
         panelRect.anchoredPosition = Vector2.zero;
-        panelRect.sizeDelta = new Vector2(600, 220); // Tamaño inicial base
+        panelRect.sizeDelta = new Vector2(620, 300);
 
         Image panelImg = panelInfo.AddComponent<Image>();
         panelImg.color = new Color(0f, 0f, 0f, 0.82f);
 
-        // Diseñador vertical automático para el Panel completo (Mantiene tu autodimensión)
         VerticalLayoutGroup layout = panelInfo.AddComponent<VerticalLayoutGroup>();
-        layout.padding = new RectOffset(24, 45, 24, 24); // Margen derecho extra para que el texto no pise la X
-        layout.spacing = 12; 
+        layout.padding = new RectOffset(24, 45, 24, 24);
+        layout.spacing = 12;
         layout.childControlWidth = true;
         layout.childControlHeight = true;
         layout.childForceExpandWidth = true;
@@ -110,26 +105,61 @@ public class HotspotManager : MonoBehaviour
         panelFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         panelFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
-        // ── BOTÓN DE CIERRE (X) CON EL TRUCO PARA IGNORES EL LAYOUT ──
+        // 2. Texto nombre
+        GameObject goNombre = new GameObject("TextoNombre");
+        goNombre.transform.SetParent(panelInfo.transform, false);
+
+        textoNombre = goNombre.AddComponent<Text>();
+        textoNombre.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        textoNombre.fontSize = 38;
+        textoNombre.fontStyle = FontStyle.Bold;
+        textoNombre.color = Color.white;
+        textoNombre.text = "";
+        textoNombre.horizontalOverflow = HorizontalWrapMode.Wrap;
+        textoNombre.verticalOverflow = VerticalWrapMode.Overflow;
+
+        // 3. Texto descripción
+        GameObject goDesc = new GameObject("TextoDescripcion");
+        goDesc.transform.SetParent(panelInfo.transform, false);
+
+        textoDescripcion = goDesc.AddComponent<Text>();
+        textoDescripcion.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        textoDescripcion.fontSize = 28;
+        textoDescripcion.color = new Color(0.85f, 0.85f, 0.85f, 1f);
+        textoDescripcion.text = "";
+        textoDescripcion.horizontalOverflow = HorizontalWrapMode.Wrap;
+        textoDescripcion.verticalOverflow = VerticalWrapMode.Overflow;
+
+        // 4. Botón X — VA AL FINAL para que el panel ya tenga su tamaño calculado
         GameObject goCierre = new GameObject("BotonCerrarHotspot");
         goCierre.transform.SetParent(panelInfo.transform, false);
-        
-        RectTransform rCierre = goCierre.AddComponent<RectTransform>();
-        rCierre.anchorMin = new Vector2(1, 1); // Anclado arriba a la derecha
-        rCierre.anchorMax = new Vector2(1, 1);
-        rCierre.pivot = new Vector2(1, 1);     // Pivote arriba a la derecha
-        rCierre.anchoredPosition = new Vector2(-12, -12); // Clavado justo en el borde interno superior derecho
-        rCierre.sizeDelta = new Vector2(35, 35);
 
-        // MÁGIA: Esto hace que ignore por completo el VerticalLayoutGroup y se quede fijo en la esquina
+        RectTransform rCierre = goCierre.AddComponent<RectTransform>();
+        rCierre.anchorMin = new Vector2(1, 1);
+        rCierre.anchorMax = new Vector2(1, 1);
+        rCierre.pivot = new Vector2(1, 1);
+        rCierre.anchoredPosition = new Vector2(-10, -10);
+        rCierre.sizeDelta = new Vector2(44, 44);
+
+        // Ignorar el VerticalLayoutGroup para que la X quede fija en la esquina
         LayoutElement layoutElement = goCierre.AddComponent<LayoutElement>();
         layoutElement.ignoreLayout = true;
+
+        Image bgCierre = goCierre.AddComponent<Image>();
+        bgCierre.color = new Color(0f, 0f, 0f, 0f); // transparente, solo para que el Button funcione
 
         Button btnCierre = goCierre.AddComponent<Button>();
         btnCierre.onClick.AddListener(OcultarPanel);
 
+        ColorBlock cb = btnCierre.colors;
+        cb.normalColor = Color.white;
+        cb.highlightedColor = new Color(1f, 0.5f, 0.5f);
+        cb.pressedColor = new Color(0.8f, 0.1f, 0.1f);
+        btnCierre.colors = cb;
+
         GameObject goCierreTexto = new GameObject("TextoX");
         goCierreTexto.transform.SetParent(goCierre.transform, false);
+
         RectTransform rCierreTexto = goCierreTexto.AddComponent<RectTransform>();
         rCierreTexto.anchorMin = Vector2.zero;
         rCierreTexto.anchorMax = Vector2.one;
@@ -139,35 +169,10 @@ public class HotspotManager : MonoBehaviour
         Text txtCierre = goCierreTexto.AddComponent<Text>();
         txtCierre.text = "✕";
         txtCierre.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        txtCierre.fontSize = 24;
+        txtCierre.fontSize = 35;
         txtCierre.fontStyle = FontStyle.Bold;
         txtCierre.alignment = TextAnchor.MiddleCenter;
         txtCierre.color = new Color(0.9f, 0.25f, 0.25f, 1f);
-
-        // 2. Componente de Texto del Nombre
-        GameObject goNombre = new GameObject("TextoNombre");
-        goNombre.transform.SetParent(panelInfo.transform, false);
-        
-        textoNombre = goNombre.AddComponent<Text>();
-        textoNombre.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        textoNombre.fontSize = 24;
-        textoNombre.fontStyle = FontStyle.Bold;
-        textoNombre.color = Color.white;
-        textoNombre.text = "";
-        textoNombre.horizontalOverflow = HorizontalWrapMode.Wrap;
-        textoNombre.verticalOverflow = Vector2.zero == Vector2.zero ? VerticalWrapMode.Overflow : VerticalWrapMode.Truncate;
-
-        // 3. Componente de Texto de la Descripción
-        GameObject goDesc = new GameObject("TextoDescripcion");
-        goDesc.transform.SetParent(panelInfo.transform, false);
-
-        textoDescripcion = goDesc.AddComponent<Text>();
-        textoDescripcion.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        textoDescripcion.fontSize = 18;
-        textoDescripcion.color = new Color(0.85f, 0.85f, 0.85f, 1f);
-        textoDescripcion.text = "";
-        textoDescripcion.horizontalOverflow = HorizontalWrapMode.Wrap;
-        textoDescripcion.verticalOverflow = VerticalWrapMode.Overflow;
 
         panelInfo.SetActive(false);
     }
