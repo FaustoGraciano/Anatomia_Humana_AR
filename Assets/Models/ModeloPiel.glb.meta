@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 3e9f71661f068a64ea2ada1ac2f74321
+guid: c44e15df958ba6a4d83517e2f2d63d82
 ScriptedImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -30,3 +30,7 @@ ScriptedImporter:
     code: 20
     messages:
     - KHR_materials_specular
+  - type: 2
+    code: 20
+    messages:
+    - KHR_materials_ior

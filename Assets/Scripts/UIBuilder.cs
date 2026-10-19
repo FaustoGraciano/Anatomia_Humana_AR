@@ -65,6 +65,27 @@ public class UIBuilder : MonoBehaviour
         CrearBoton(panel, "Órganos",   new Color(0.85f, 0.33f, 0.31f, 1f), () => modelManager.OnClickOrganos());
         CrearBoton(panel, "Músculos",  new Color(0.95f, 0.61f, 0.07f, 1f), () => modelManager.OnClickMusculos());
 
+        // Separador visual
+        GameObject separador = new GameObject("Separador");
+        separador.transform.SetParent(panel.transform, false);
+        RectTransform sepRect = separador.AddComponent<RectTransform>();
+        sepRect.sizeDelta = new Vector2(0, 2);
+        Image sepImg = separador.AddComponent<Image>();
+        sepImg.color = new Color(1f, 1f, 1f, 0.2f);
+        sepImg.raycastTarget = false;
+
+        // Botones de zoom
+        ModelRotator rotator = FindFirstObjectByType<ModelRotator>();
+        CrearBoton(panel, "＋  Acercar", new Color(0.2f, 0.75f, 0.4f, 1f), () => rotator?.AcercarModelo());
+        CrearBoton(panel, "－  Alejar",  new Color(0.2f, 0.75f, 0.4f, 1f), () => rotator?.AlejarModelo());
+
+
+         HotspotManager hotspotManager = FindFirstObjectByType<HotspotManager>();
+        if (hotspotManager != null)
+        {
+            hotspotManager.InicializarPanelConCanvas(canvas);
+        }
+
         // Empieza oculto — se activa cuando se detecta el QR
         canvasGO.SetActive(false);
 
@@ -72,6 +93,7 @@ public class UIBuilder : MonoBehaviour
         ImageTrackingManager tracker = FindObjectOfType<ImageTrackingManager>();
         if (tracker != null)
             tracker.SetCanvas(canvasGO);
+
     }
 
     private void CrearBoton(GameObject parent, string label, Color color, UnityEngine.Events.UnityAction accion)

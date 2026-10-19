@@ -1,54 +1,78 @@
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.EnhancedTouch;
 using System.Collections.Generic;
+using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 
 public class ImageTrackingManager : MonoBehaviour
 {
     [SerializeField] private ARTrackedImageManager trackedImageManager;
+    [SerializeField] private ARRaycastManager raycastManager;
     [SerializeField] private ModelManager modelManager;
-    [SerializeField] private GameObject canvasUI;
-    [SerializeField] private string nombreImagenQR = "QR Anatomia RA"; // debe coincidir con el nombre en la librería
+    [SerializeField] private string nombreImagenQR = "images";
 
-    private bool modeloActivado = false;
-    
-public void SetCanvas(GameObject canvas)
-{
-    canvasUI = canvas;
-}
+    private GameObject canvasUI;
+    private bool qrDetectado = false;
+    private bool modeloColocado = false;
+    private List<ARRaycastHit> hits = new List<ARRaycastHit>();
+
+    public void SetCanvas(GameObject canvas)
+    {
+        canvasUI = canvas;
+    }
 
     void OnEnable()
     {
-        trackedImageManager.trackedImagesChanged += OnTrackedImagesChanged;
+        trackedImageManager.trackablesChanged.AddListener(OnTrackablesChanged);
+        EnhancedTouchSupport.Enable();
     }
 
     void OnDisable()
     {
-        trackedImageManager.trackedImagesChanged -= OnTrackedImagesChanged;
+        if (trackedImageManager != null)
+            trackedImageManager.trackablesChanged.RemoveListener(OnTrackablesChanged);
+
+        if (EnhancedTouchSupport.enabled)
+            EnhancedTouchSupport.Disable();
     }
 
-    private void OnTrackedImagesChanged(ARTrackedImagesChangedEventArgs args)
-    {
-        // Solo nos interesa la primera vez que se detecta
-        if (modeloActivado) return;
+    private void OnTrackablesChanged(ARTrackablesChangedEventArgs<ARTrackedImage> args)
+{
+    if (qrDetectado) return;
 
-        foreach (ARTrackedImage trackedImage in args.added)
+    foreach (ARTrackedImage trackedImage in args.added)
+    {
+        if (trackedImage.referenceImage.name == nombreImagenQR)
         {
-            if (trackedImage.referenceImage.name == nombreImagenQR)
-            {
-                ActivarExperiencia(trackedImage.transform.position);
-            }
+            qrDetectado = true;
+
+            // Aparece 1.5 metros adelante de la cámara
+            Camera arCamera = FindFirstObjectByType<Camera>();
+            Vector3 posicion = arCamera.transform.position + 
+                               arCamera.transform.forward * 1.5f;
+
+            modelManager.IniciarEnPosicion(posicion);
+
+            if (canvasUI != null)
+                canvasUI.SetActive(true);
         }
     }
+}
 
-    private void ActivarExperiencia(Vector3 posicion)
-    {
-        modeloActivado = true;
 
-        // Posiciona y activa el cuerpo con piel en donde está el QR
-        modelManager.IniciarEnPosicion(posicion);
-
-        // Muestra los botones
-        canvasUI.SetActive(true);
-    }
+    // SOLO PARA TESTING EN EDITOR
+        void OnGUI()
+{
+        #if UNITY_EDITOR
+        if (GUI.Button(new Rect(10, 10, 200, 50), "SIMULAR QR"))
+        {
+            qrDetectado = true;
+            modelManager.IniciarEnPosicion(new Vector3(0, 0, 2));
+            if (canvasUI != null)
+                canvasUI.SetActive(true);
+        }
+        #endif
+}
 }

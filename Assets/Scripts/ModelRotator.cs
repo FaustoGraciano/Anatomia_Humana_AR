@@ -6,7 +6,7 @@ using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 public class ModelRotator : MonoBehaviour
 {
     [Header("Rotación")]
-    [SerializeField] private float rotationSpeed = 0.4f;
+    [SerializeField] private float rotationSpeed = 0.2f;
 
     [Header("Zoom")]
     [SerializeField] private float zoomSpeed = 0.01f;
@@ -26,53 +26,57 @@ public class ModelRotator : MonoBehaviour
     }
 
     void Update()
-    {
-        int cantidadToques = Touch.activeTouches.Count;
-
-        // ── Rotación — un dedo ───────────────────────────────────
-        if (cantidadToques == 1)
         {
-            var touch = Touch.activeTouches[0];
+        #if UNITY_EDITOR
 
-            // Ignorar si toca un botón
-            if (EventSystem.current != null &&
-                EventSystem.current.IsPointerOverGameObject(touch.touchId))
-                return;
-
-            if (touch.delta.sqrMagnitude > 0)
+            // ───────────────── MOUSE EN EDITOR ─────────────────
+            if (Input.GetMouseButton(0))
             {
-                float rotY = touch.delta.x * rotationSpeed;
-                // Solo rota en Y — gira sobre sí mismo
+                float rotY = Input.GetAxis("Mouse X") * 5f;
                 transform.Rotate(Vector3.up, -rotY, Space.World);
             }
-        }
 
-        // ── Zoom — dos dedos (pinch) ─────────────────────────────
-        if (cantidadToques == 2)
-        {
-            var touch0 = Touch.activeTouches[0];
-            var touch1 = Touch.activeTouches[1];
+        #else
 
-            float distanciaActual = Vector2.Distance(
-                touch0.screenPosition,
-                touch1.screenPosition
-            );
+            // ───────────────── TOUCH EN CELULAR ─────────────────
+            int cantidadToques = Touch.activeTouches.Count;
 
-            // Primer frame del pinch — guardamos la distancia inicial
-            if (touch0.phase == UnityEngine.InputSystem.TouchPhase.Began ||
-                touch1.phase == UnityEngine.InputSystem.TouchPhase.Began)
+            if (cantidadToques == 1)
             {
-                distanciaPreviaPinch = distanciaActual;
-                return;
+                var touch = Touch.activeTouches[0];
+
+                if (EventSystem.current != null &&
+                    EventSystem.current.IsPointerOverGameObject(touch.touchId))
+                    return;
+
+                if (touch.delta.sqrMagnitude > 0)
+                {
+                    float rotY = touch.delta.x * rotationSpeed;
+                    transform.Rotate(Vector3.up, -rotY, Space.World);
+                }
             }
 
-            float diferencia = distanciaActual - distanciaPreviaPinch;
-            distanciaPreviaPinch = distanciaActual;
+        #endif
+        }
 
-            // Aplicar zoom como escala uniforme
-            float nuevaEscala = transform.localScale.x + diferencia * zoomSpeed;
-            nuevaEscala = Mathf.Clamp(nuevaEscala, minScale, maxScale);
+            public void AcercarModelo()
+        {
+            float nuevaEscala = Mathf.Clamp(
+                transform.localScale.x + 0.1f,
+                minScale,
+                maxScale
+            );
             transform.localScale = Vector3.one * nuevaEscala;
         }
-    }
+
+        public void AlejarModelo()
+        {
+            float nuevaEscala = Mathf.Clamp(
+                transform.localScale.x - 0.1f,
+                minScale,
+                maxScale
+            );
+            transform.localScale = Vector3.one * nuevaEscala;
+        }
+
 }
